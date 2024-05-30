@@ -3,9 +3,10 @@ import requests
 
 def get_wikipedia_text(url: str):
     page = requests.get(url)
-    yield page.status_code
+    if page.status_code != 200:
+        return Exception("Page couldn't be downloaded!")
     wikisoup = BeautifulSoup(page.content, 'html.parser')
-    yield wikisoup.find_all('p') # for now, this will be changed to just text content later.
+    return wikisoup.find_all('p') # filter by class=mw-body-content?
 
 
 if __name__ == '__main__':
