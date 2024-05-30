@@ -5,7 +5,7 @@ def get_wikipedia_text(url: str):
     page = requests.get(url)
     yield page.status_code
     wikisoup = BeautifulSoup(page.content, 'html.parser')
-    yield wikisoup.prettify() # for now, this will be changed to just text content later.
+    yield wikisoup.find_all('p') # for now, this will be changed to just text content later.
 
 
 if __name__ == '__main__':
