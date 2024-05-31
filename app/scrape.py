@@ -1,5 +1,4 @@
 from bs4 import BeautifulSoup
-import pandas as pd
 import requests
 import dotenv
 
@@ -21,7 +20,7 @@ def get_wikipedia_text(url: str) -> Exception | list:
         chunks.extend([i.replace('\\', '') for i in child.text.split('\n') if i not in ['.mw', '\n', '']])
     return chunks
 
-def get_embeddings(texts: pd.Series,  
+def get_embeddings(texts: list[str],  
                 api_url:str=env['API_URL'], token:str=env['HF_TOKEN']):
     headers = {"Authorization": f"Bearer {token}"}
     response = requests.post(api_url, headers=headers, json={"inputs": texts, "options": {"wait_for_model": True}})
