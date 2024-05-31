@@ -1,15 +1,35 @@
 from bs4 import BeautifulSoup
+import pandas as pd
 import requests
+import dotenv
 
-def get_wikipedia_text(url: str):
+env = dotenv.dotenv_values('data-and-utils/.env')
+
+
+def get_wikipedia_text(url: str) -> Exception | list:
     page = requests.get(url)
     if page.status_code != 200:
-        return Exception("Page couldn't be downloaded!")
+        return Exception("Page couldn't be downloaded!", page.content)
     wikisoup = BeautifulSoup(page.content, 'html.parser')
-    return wikisoup.find_all('p') # filter by class=mw-body-content?
+    content = wikisoup.find('div', attrs={
+        'class' : "mw-content-ltr mw-parser-output"},
+                            ) # find parser output (article content basically)
+    chunks = []
+    for child in content.children:
+        if "References" in child.text:
+            break
+        chunks.extend([i.replace('\\', '') for i in child.text.split('\n') if i not in ['.mw', '\n', '']])
+    return chunks
 
+def get_embeddings(texts: pd.Series,  
+                api_url:str=env['API_URL'], token:str=env['HF_TOKEN']):
+    headers = {"Authorization": f"Bearer {token}"}
+    response = requests.post(api_url, headers=headers, json={"inputs": texts, "options": {"wait_for_model": True}})
+    return response.json()
 
 if __name__ == '__main__':
     url = 'https://en.wikipedia.org/wiki/Luke_Skywalker'
-    status, content = get_wikipedia_text(url)
-    print(status, content)
+    content = get_wikipedia_text(url)
+    print(content, sep='\n')
+    embeddings = get_embeddings(content)
+    print(len(embeddings) + ', ' + len(embeddings[0]))
