@@ -1,1 +1,1 @@
-# models for users, users storing conversations with their own logs.
+# models for users, users storing conversations with their own logs. (FUTURE DEVELOPMENT)
