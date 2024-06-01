@@ -1,7 +1,7 @@
 import faiss
 import numpy as np
 import pandas as pd
-from scrape import get_wikipedia_text, get_embeddings
+from app.scrape import get_wikipedia_text, get_embeddings
 
 class RAGSearcher:
     def __init__(self, urls: list[str]) -> None:
