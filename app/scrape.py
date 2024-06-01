@@ -27,14 +27,14 @@ def get_embeddings(texts: list[str],
     return response.json()
 
 def query_llm(query: str, context: list):
-    prompt = f"Answer the question {query} using the information: {context.join(' ')}"
+    prompt = f"Using the information: {' '.join(context)}, Answer the question {query}"
     pipe = pipeline("text2text-generation", model="google/flan-t5-small")
-    return pipe(query + context)
+    return pipe(prompt)
 
 if __name__ == '__main__':
-    url = 'https://en.wikipedia.org/wiki/Luke_Skywalker'
-    content = get_wikipedia_text(url)
-    print(content, sep='\n')
-    embeddings = get_embeddings(content)
-    print(str(len(embeddings)) + ', ' + str(len(embeddings[0])))
-    print(query_llm("Hey how are you doing today?", content[:3]))
+    from ragsearch import RAGSearcher
+    main = RAGSearcher(['https://en.wikipedia.org/wiki/Luke_Skywalker'])
+    query = "Who is Luke Skywalker's teacher?"
+    context = main.search_faiss(query)
+    print(context, sep='\n')
+    print(query_llm(query, context))
