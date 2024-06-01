@@ -35,4 +35,3 @@ class RAGSearcher:
 if __name__ == "__main__":
     main = RAGSearcher(['https://en.wikipedia.org/wiki/Luke_Skywalker'])
     print(main.search_faiss("Why is Luke Skywalker Famous?"))
-    
