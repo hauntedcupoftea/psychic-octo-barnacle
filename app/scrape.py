@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup
 from transformers import pipeline
 import requests
 import dotenv
+import transformers
 
 env = dotenv.dotenv_values('data-and-utils/.env')
 
@@ -26,9 +27,8 @@ def get_embeddings(texts: list[str],
     response = requests.post(api_url, headers=headers, json={"inputs": texts, "options": {"wait_for_model": True}})
     return response.json()
 
-def query_llm(query: str, context: list):
+def query_llm(query: str, context: list, pipe):
     prompt = f"Using the information: {' '.join(context)}, Answer the question {query}"
-    pipe = pipeline("text2text-generation", model="google/flan-t5-small")
     return pipe(prompt)
 
 if __name__ == '__main__':
@@ -36,5 +36,6 @@ if __name__ == '__main__':
     main = RAGSearcher(['https://en.wikipedia.org/wiki/Luke_Skywalker'])
     query = "Who is Luke Skywalker's teacher?"
     context = main.search_faiss(query)
+    pipe = pipeline("text2text-generation", model="google/flan-t5-small")
     print(context, sep='\n')
-    print(query_llm(query, context))
+    print(query_llm(query, context, pipe))
