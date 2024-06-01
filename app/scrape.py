@@ -2,11 +2,11 @@ from bs4 import BeautifulSoup
 from transformers import pipeline
 import requests
 import dotenv
-import transformers
+
 
 env = dotenv.dotenv_values('data-and-utils/.env')
 
-def get_wikipedia_text(url: str) -> Exception | list:
+def get_wikipedia_text(url: str, tokenizer:str="sentence-transformers/all-MiniLM-L6-v2") -> Exception | list:
     page = requests.get(url)
     if page.status_code != 200:
         return Exception("Page couldn't be downloaded!", page.content)
@@ -19,6 +19,10 @@ def get_wikipedia_text(url: str) -> Exception | list:
         if "References" in child.text:
             break
         chunks.extend([i.replace('\\', '') for i in child.text.split('\n') if i not in ['.mw', '\n', '']])
+    # sentences = []
+    # for chunk in chunks:
+    #     print(splitter(chunk))
+    #     sentences.extend(chunk)
     return chunks
 
 def get_embeddings(texts: list[str],  
@@ -28,13 +32,13 @@ def get_embeddings(texts: list[str],
     return response.json()
 
 def query_llm(query: str, context: list, pipe):
-    prompt = f"Using the information: {' '.join(context)}, Answer the question {query}"
+    prompt = f"Using the information: {' '.join(context)}, Answer the question: {query}"
     return pipe(prompt)
 
 if __name__ == '__main__':
     from ragsearch import RAGSearcher
     main = RAGSearcher(['https://en.wikipedia.org/wiki/Luke_Skywalker'])
-    query = "Who is Luke Skywalker's teacher?"
+    query = "How many people has Luke Skywalker Killed?"
     context = main.search_faiss(query)
     pipe = pipeline("text2text-generation", model="google/flan-t5-small")
     print(context, sep='\n')
