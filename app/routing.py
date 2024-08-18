@@ -8,6 +8,8 @@ qna = APIRouter(
     tags=['qna']
 )
 
+lss, llm = init_skywalker_rag()
+
 @qna.post('/luke-skywalker-wiki', status_code=status.HTTP_200_OK, response_model=QResponse)
 def api_rag_skywalker(request: QQuery):
-    return luke_skywalker_rag(request)
+    return luke_skywalker_rag(request, lss, llm)
