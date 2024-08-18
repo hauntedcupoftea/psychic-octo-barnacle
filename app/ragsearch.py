@@ -1,7 +1,7 @@
 import faiss
 import numpy as np
 import pandas as pd
-from app.scrape import get_wikipedia_text, get_embeddings
+from scrape import get_wikipedia_text, get_embeddings
 
 class RAGSearcher:
     def __init__(self, urls: list[str]) -> None:
@@ -13,8 +13,7 @@ class RAGSearcher:
         for url in urls:
             text_corpus.extend(get_wikipedia_text(url))
         text_embeddings = get_embeddings(text_corpus) 
-        faiss_db = self.init_new_vector_database(text_embeddings, len(text_embeddings[0]), 
-                                            len(text_embeddings) // 50) # can be changed later
+        faiss_db = self.init_new_vector_database(text_embeddings, len(text_embeddings[0]), int(np.sqrt(len(text_embeddings)) / 4)) # can be changed later
         return text_corpus, faiss_db
 
     # TODO in the future: add a way to maybe save db's by conversation by person maybe? 

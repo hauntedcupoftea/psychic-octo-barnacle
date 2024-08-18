@@ -1,19 +1,20 @@
 """All functions that will go into API calls go here"""
 from fastapi import HTTPException, status
-from transformers import pipeline
-from app.scrape import query_llm
-from app.ragsearch import RAGSearcher
-from app.basemodels import QQuery, QResponse
+from transformers import pipeline, Pipeline
+from scrape import query_llm
+from ragsearch import RAGSearcher
+from basemodels import QQuery, QResponse
 
-# TODO, make this more modular and granular
-def luke_skywalker_rag(request: QQuery, search=RAGSearcher):
+def init_skywalker_rag():
+    luke_skywalker_searcher = RAGSearcher(['https://en.wikipedia.org/wiki/Luke_Skywalker'])
+    llm_pipe = pipeline("text2text-generation", model="google/flan-t5-small", device="cuda")
+    return luke_skywalker_searcher, llm_pipe
+
+def luke_skywalker_rag(request: QQuery, searcher: RAGSearcher, llm_pipe: Pipeline):
     if request.query in [None, ""]:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"invalid query")
-    main = search(['https://en.wikipedia.org/wiki/Luke_Skywalker'])
-    query = "How many people has Luke Skywalker Killed?"
-    context = main.search_faiss(query)
-    pipe = pipeline("text2text-generation", model="google/flan-t5-small")
-    llmres = query_llm(request.query, context, pipe)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid query")
+    context = searcher.search_faiss(request.query)
+    llmres = query_llm(request.query, context, llm_pipe)
     response = QResponse(
         query=request.query,
         relevant_chunks=context,
@@ -22,5 +23,18 @@ def luke_skywalker_rag(request: QQuery, search=RAGSearcher):
     return response
 
 if __name__ == '__main__':
-    # test
-    print(luke_skywalker_rag(QQuery(query="Where was Luke Skywalker born?")))
+    # timed test for efficiency
+    import time
+    t0 = time.time()
+    lss, llm = init_skywalker_rag()
+    t1 = time.time()
+    print(luke_skywalker_rag(QQuery(query="Where was Luke Skywalker born?"), lss, llm))
+    t2 = time.time()
+    print(luke_skywalker_rag(QQuery(query="Who did Luke Skywalker marry?"), lss, llm))
+    t3 = time.time()
+    print(f"""
+    Testing report:
+    - time taken by init function: {t1-t0}
+    - time taken by first query: {t2-t1}
+    - time taken by second query: {t3-t2}
+    """)
