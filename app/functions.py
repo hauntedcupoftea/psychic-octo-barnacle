@@ -1,19 +1,19 @@
 """All functions that will go into API calls go here"""
 from fastapi import HTTPException, status
 from transformers import pipeline, Pipeline
-from scrape import query_llm
-from ragsearch import RAGSearcher
-from basemodels import QQuery, QResponse
+from app.scrape import query_llm
+from app.ragsearch import RAGSearcher
+from app.basemodels import QQuery, QResponse
 
 def init_skywalker_rag():
     luke_skywalker_searcher = RAGSearcher(['https://en.wikipedia.org/wiki/Luke_Skywalker'])
-    llm_pipe = pipeline("text2text-generation", model="google/flan-t5-small", device="cuda")
+    llm_pipe = pipeline("text2text-generation", model="google/flan-t5-small", device="cuda", max_new_tokens=64)
     return luke_skywalker_searcher, llm_pipe
 
 def luke_skywalker_rag(request: QQuery, searcher: RAGSearcher, llm_pipe: Pipeline):
     if request.query in [None, ""]:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid query")
-    context = searcher.search_faiss(request.query)
+    context = searcher.search_faiss(request.query, k=5)
     llmres = query_llm(request.query, context, llm_pipe)
     response = QResponse(
         query=request.query,
